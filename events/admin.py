@@ -20,6 +20,7 @@ class EventBookingAdmin(admin.ModelAdmin):
         "status",
         "created_at",
     )
+    list_editable = ("status",)
     list_filter = ("event_type", "status", "created_at")
     search_fields = (
         "name",
@@ -37,9 +38,11 @@ class ContactEnquiryAdmin(admin.ModelAdmin):
         "contact_number",
         "event_type",
         "event_date",
+        "status",
         "created_at",
     )
-    list_filter = ("event_type", "created_at")
+    list_editable = ("status",)
+    list_filter = ("event_type", "status", "created_at")
     search_fields = (
         "name",
         "email",

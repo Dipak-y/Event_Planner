@@ -46,6 +46,14 @@ class EventBooking(models.Model):
 
 
 class ContactEnquiry(models.Model):
+    STATUS_CHOICES = [
+            ("Pending", "Pending"),
+            ("Confirmed", "Confirmed"),
+            ("Completed", "Completed"),
+            ("Cancelled", "Cancelled"),
+        ]
+
+    
     name = models.CharField(max_length=100)
     email = models.EmailField()
     contact_number = models.CharField(max_length=20)
@@ -57,6 +65,11 @@ class ContactEnquiry(models.Model):
         blank=True
     )
     event_date = models.DateField()
+    status = models.CharField(
+            max_length=20,
+            choices=STATUS_CHOICES,
+            default="Pending"
+        )
     message = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
