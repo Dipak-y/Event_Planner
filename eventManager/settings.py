@@ -18,6 +18,8 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
+SECRET_KEY = os.getenv("SECRET_KEY")
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -31,7 +33,11 @@ SECRET_KEY = "django-insecure--x-u8*y+o2!p_=yl(&8%t*2o&8w7qsin2r4drb+wki#50g-w4u
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    "event-planner-five-ebon.vercel.app",
+    "localhost",
+    "127.0.0.1",
+]
 
 
 # Application definition
@@ -114,7 +120,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = "Asia/Kathmandu"
 
 USE_I18N = True
 
