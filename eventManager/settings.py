@@ -31,10 +31,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure--x-u8*y+o2!p_=yl(&8%t*2o&8w7qsin2r4drb+wki#50g-w4u"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = [
-    "event-planner-five-ebon.vercel.app",
+    "event-planner-lr7hpxzex-dpak.vercel.app",
     "localhost",
     "127.0.0.1",
 ]
