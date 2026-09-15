@@ -34,7 +34,7 @@ SECRET_KEY = "django-insecure--x-u8*y+o2!p_=yl(&8%t*2o&8w7qsin2r4drb+wki#50g-w4u
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    "event-planner-mxxqk8axv-dpak.vercel.app",
+    "event-planner-five-ebon.vercel.app",
     "localhost",
     "127.0.0.1",
 ]
