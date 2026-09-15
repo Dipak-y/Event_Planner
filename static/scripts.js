@@ -199,7 +199,7 @@ if (form) {
       if (!input) return;
 
       var valid = input.value.trim() !== "" &&
-        (id !== "email" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.value));
+        (id !== "email" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.value)) && (id !== "contact" || /^[0-9]{10}$/.test(input.value.trim()));
 
       input.parentElement.classList.toggle("is-error", !valid);
 
@@ -354,7 +354,8 @@ if (bookingForm) {
       var input = document.getElementById(id);
       if (!input) return;
 
-      var valid = input.value.trim() !== "";
+      var valid = input.value.trim() !== "" &&  
+       (id !== "bookContact" || /^[0-9]{10}$/.test(input.value.trim()));
 
       input.parentElement.classList.toggle("is-error", !valid);
 

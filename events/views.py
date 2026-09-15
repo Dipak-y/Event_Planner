@@ -8,7 +8,7 @@ def contact_submit(request):
         name = request.POST.get("name")
         email = request.POST.get("email")
         contact_number = request.POST.get("contact_number")
-        event_type = request.POST.get("event_type")
+        event_type = request.POST.get("event_types")
         event_date = request.POST.get("event_date")
         message = request.POST.get("message")
 
@@ -32,7 +32,7 @@ def BookingForm(request):
     if request.method == "POST":
         name = request.POST.get("name")
         contact_number = request.POST.get("contact_number")
-        event_type = request.POST.get("event_type")
+        event_type = request.POST.get("event_types")
         event_date = request.POST.get("event_date")
 
         service = Service.objects.get(id=event_type)
