@@ -109,7 +109,6 @@ function updateGallery(){
 
 chips.forEach(function(chip){
   chip.addEventListener("click",function(){
-    alert("Clicked filter: " + chip.getAttribute("data-filter"));
     chips.forEach(function(c){c.classList.remove("is-active");});
     chip.classList.add("is-active");
     showAll=false;
