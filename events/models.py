@@ -1,20 +1,6 @@
 from django.db import models
 
 
-class Service(models.Model):
-    title = models.CharField(max_length=100, unique=True)
-    description = models.TextField()
-    image = models.ImageField(upload_to="services/")
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    @property
-    def first_word(self):
-        return self.title.split()[0]
-
-    def __str__(self):
-        return self.title
-
-
 class EventBooking(models.Model):
     STATUS_CHOICES = [
         ("Pending", "Pending"),
@@ -23,12 +9,23 @@ class EventBooking(models.Model):
         ("Cancelled", "Cancelled"),
     ]
 
+
+    SELECT_CHOICES = [
+        ("Wedding", "Wedding"),
+        ("Engagement", "Engagement"),
+        ("Reception Party", "Reception Party"),
+        ("Anniversary", "Anniversary"),
+        ("Birthday Celebration", "Birthday Celebration"),
+        ("Baby Shower", "Baby Shower"),
+        ("Themed Parties", "Themed Parties"),
+        ("Other", "Other"),
+    ]
+
     name = models.CharField(max_length=100)
     contact_number = models.CharField(max_length=15)
-    event_type = models.ForeignKey(
-        Service,
-        on_delete=models.PROTECT,
-        related_name="bookings",
+    event_type = models.CharField(
+        max_length=100,
+        choices=SELECT_CHOICES,
         null=True,
         blank=True
     )
@@ -52,15 +49,24 @@ class ContactEnquiry(models.Model):
             ("Completed", "Completed"),
             ("Cancelled", "Cancelled"),
         ]
+    SELECT_CHOICES = [
+            ("Wedding", "Wedding"),
+            ("Engagement", "Engagement"),
+            ("Reception Party", "Reception Party"),
+            ("Anniversary", "Anniversary"),
+            ("Birthday Celebration", "Birthday Celebration"),
+            ("Baby Shower", "Baby Shower"),
+            ("Themed Parties", "Themed Parties"),
+            ("Other", "Other"),
+        ]
 
     
     name = models.CharField(max_length=100)
     email = models.EmailField()
     contact_number = models.CharField(max_length=20)
-    event_type = models.ForeignKey(
-        Service,
-        on_delete=models.PROTECT,
-        related_name="enquiries",
+    event_type = models.CharField(
+        max_length=100,
+        choices=SELECT_CHOICES,
         null=True,
         blank=True
     )
@@ -75,19 +81,3 @@ class ContactEnquiry(models.Model):
 
     def __str__(self):
         return f"{self.name} - {self.event_type.title}"
-
-
-class GalleryImage(models.Model):
-    title = models.CharField(max_length=100)
-    image = models.ImageField(upload_to="gallery/")
-    service = models.ForeignKey(
-        Service,
-        on_delete=models.CASCADE,
-        related_name="gallery_images",
-        null=True,
-        blank=True
-    )
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.title

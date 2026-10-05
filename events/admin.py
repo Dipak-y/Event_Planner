@@ -1,13 +1,5 @@
 from django.contrib import admin
-from .models import EventBooking, ContactEnquiry, GalleryImage, Service
-
-
-@admin.register(Service)
-class ServiceAdmin(admin.ModelAdmin):
-    list_display = ("title", "created_at")
-    list_filter = ("created_at",)
-    search_fields = ("title", "description")
-    ordering = ("-created_at",)
+from .models import EventBooking, ContactEnquiry
 
 
 @admin.register(EventBooking)
@@ -48,20 +40,5 @@ class ContactEnquiryAdmin(admin.ModelAdmin):
         "email",
         "contact_number",
         "event_type__title",
-    )
-    ordering = ("-created_at",)
-
-
-@admin.register(GalleryImage)
-class GalleryImageAdmin(admin.ModelAdmin):
-    list_display = (
-        "title",
-        "service",
-        "created_at",
-    )
-    list_filter = ("service", "created_at")
-    search_fields = (
-        "title",
-        "service__title",
     )
     ordering = ("-created_at",)
