@@ -482,20 +482,4 @@
     });
   }
 
-  (function () {
-  var nav = document.getElementById("nav");
-  var logo = document.getElementById("navLogo");
-  if (!nav || !logo) return;
-  var onDark = logo.getAttribute("data-ondark");
-  var onGold = logo.getAttribute("data-ongold");
-  [onDark, onGold].forEach(function (s) { new Image().src = s; });
-  function sync() {
-    var gold = nav.classList.contains("is-stuck") && !nav.classList.contains("is-open");
-    var want = gold ? onGold : onDark;
-    if (logo.getAttribute("src") !== want) logo.setAttribute("src", want);
-  }
-  new MutationObserver(sync).observe(nav, { attributes: true, attributeFilter: ["class"] });
-  sync();
-})();
-
 })();
