@@ -132,6 +132,17 @@
     moreBtn.addEventListener("click", function () {
       showAll = !showAll;
       updateGallery();
+
+      /* Show Less: the grid collapses and the page jumps down to another section,
+         so scroll back to the top of the gallery */
+      if (!showAll) {
+        var galleryEl = document.getElementById("gallery");
+        var navEl = document.getElementById("nav");
+        if (galleryEl) {
+          var top = galleryEl.getBoundingClientRect().top + window.pageYOffset - (navEl ? navEl.offsetHeight : 0);
+          window.scrollTo({ top: Math.max(top, 0), behavior: "smooth" });
+        }
+      }
     });
   }
 
@@ -204,49 +215,90 @@
     eventDate.setAttribute("min", todayDate);
   }
 
-  /* send a form with fetch (no page reload), show message, reset on success */
-  function sendForm(f, noteEl, onSuccess) {
+  /* ---------- EmailJS (contact + booking) ---------- */
+  var EMAILJS = {
+    serviceId: "service_5lophjf",
+    publicKey: "OWYN_oXM6TeZTPDf-",
+    contactTemplate: "template_udnu8km",
+    bookingTemplate: "template_udnu8km"   /* change if booking has its own template */
+  };
+
+  /* hidden honeypot field: real people never fill it, bots do */
+  function addHoneypot(f) {
+    if (!f || f.elements["website"]) return;
+    var hp = document.createElement("input");
+    hp.type = "text";
+    hp.name = "website";
+    hp.tabIndex = -1;
+    hp.autocomplete = "off";
+    hp.setAttribute("aria-hidden", "true");
+    hp.style.cssText = "position:absolute;left:-9999px;opacity:0;height:0;width:0;";
+    f.appendChild(hp);
+  }
+  addHoneypot(document.getElementById("form"));
+  addHoneypot(document.getElementById("bookingForm"));
+
+  /* keep a copy in the Django admin too (best effort, never blocks the email) */
+  function saveToDjango(f) {
+    try {
+      if (!f.getAttribute("action")) return; /* no backend endpoint on this form */
+      var csrf = f.querySelector("[name=csrfmiddlewaretoken]");
+      fetch(f.action, {
+        method: "POST",
+        body: new FormData(f),
+        credentials: "same-origin",
+        headers: {
+          "X-Requested-With": "XMLHttpRequest",
+          "X-CSRFToken": csrf ? csrf.value : ""
+        }
+      }).catch(function () {});
+    } catch (err) {}
+  }
+
+  /* load the EmailJS library on demand if the <script> tag is missing */
+  function loadEmailJS(cb, fail) {
+    if (typeof emailjs !== "undefined") { cb(); return; }
+    var sc = document.createElement("script");
+    sc.src = "https://cdn.jsdelivr.net/npm/@emailjs/browser@4.4.1/dist/email.min.js";
+    sc.onload = cb;
+    sc.onerror = fail;
+    document.head.appendChild(sc);
+  }
+
+  /* send a form with EmailJS (no page reload), show message, reset on success */
+  function sendForm(f, noteEl, templateId, successMsg, onSuccess) {
     var btn = f.querySelector('button[type="submit"]');
     var label = btn ? btn.textContent : "";
-    var csrf = f.querySelector("[name=csrfmiddlewaretoken]");
 
-    if (btn) { btn.disabled = true; btn.textContent = "Sending..."; }
+    if (f.elements["website"] && f.elements["website"].value) return; /* bot */
+
     noteEl.className = "form__note";
     noteEl.textContent = "";
+    if (btn) { btn.disabled = true; btn.textContent = "Sending..."; }
 
-    fetch(f.action, {
-      method: "POST",
-      body: new FormData(f),
-      credentials: "same-origin",
-      headers: {
-        "X-Requested-With": "XMLHttpRequest",
-        "X-CSRFToken": csrf ? csrf.value : ""
-      }
-    })
-      .then(function (r) {
-        return r.json().catch(function () {
-          return { ok: false, message: "Something went wrong. Please try again." };
-        });
-      })
-      .then(function (d) {
-        if (d.ok) {
+    function done() {
+      if (btn) { btn.disabled = false; btn.textContent = label; }
+    }
+    function fail(err) {
+      console.error("EmailJS error:", err);
+      noteEl.classList.add("is-error");
+      noteEl.textContent = "Could not send. Please try again.";
+      done();
+    }
+
+    loadEmailJS(function () {
+      emailjs.sendForm(EMAILJS.serviceId, templateId, f, { publicKey: EMAILJS.publicKey })
+        .then(function () {
+          saveToDjango(f);
           f.reset();
           Array.prototype.forEach.call(f.querySelectorAll(".is-error"), function (el) { el.classList.remove("is-error"); });
           noteEl.classList.add("is-success");
-          noteEl.textContent = d.message;
+          noteEl.textContent = successMsg;
           if (onSuccess) onSuccess();
-        } else {
-          noteEl.classList.add("is-error");
-          noteEl.textContent = d.message || "Could not send. Please check the form.";
-        }
-      })
-      .catch(function () {
-        noteEl.classList.add("is-error");
-        noteEl.textContent = "Network error. Please check your connection and try again.";
-      })
-      .then(function () {
-        if (btn) { btn.disabled = false; btn.textContent = label; }
-      });
+          done();
+        })
+        .catch(fail);
+    }, fail);
   }
 
   /* message counter (max 60) */
@@ -265,10 +317,12 @@
 
   if (form) {
     form.addEventListener("submit", function (e) {
+      e.preventDefault();
       var ok = true;
 
       ["name", "email", "contact", "event", "eventDate", "message"].forEach(function (id) {
-        var input = document.getElementById(id);
+        /* search inside the form: id="contact" is also used by the <section> */
+        var input = form.querySelector("#" + id);
         if (!input) return;
 
         var valid = input.value.trim() !== "" &&
@@ -286,9 +340,11 @@
         note.textContent = "Please fill in all fields: valid email, 10-digit contact number, message up to 60 characters.";
         return;
       }
-      sendForm(form, note, function () {
-        setTimeout(function () { note.className = "form__note"; note.textContent = ""; }, 8000);
-      });
+      sendForm(form, note, EMAILJS.contactTemplate,
+        "Thank you! Your enquiry has been sent successfully.",
+        function () {
+          setTimeout(function () { note.className = "form__note"; note.textContent = ""; }, 8000);
+        });
     });
   }
 
@@ -325,8 +381,15 @@
     function stopAuto() { if (autoTimer) { clearInterval(autoTimer); autoTimer = null; } }
 
     /* hover (mouse) + tap/click */
+    var hoverTimer = null;
     serviceCards.forEach(function (card, idx) {
-      card.addEventListener("mouseenter", function () { hovering = true; setActive(idx, false); });
+      card.addEventListener("mouseenter", function () {
+        hovering = true;
+        clearTimeout(hoverTimer);
+        /* small delay = ignore the cursor just sweeping past cards */
+        hoverTimer = setTimeout(function () { if (idx !== current) setActive(idx, false); }, 90);
+      });
+      card.addEventListener("mouseleave", function () { clearTimeout(hoverTimer); });
       card.addEventListener("click", function () { if (idx !== current) setActive(idx, false); });
     });
     serviceWrap.addEventListener("mouseleave", function () { hovering = false; });
@@ -452,10 +515,11 @@
 
   if (bookingForm) {
     bookingForm.addEventListener("submit", function (e) {
+      e.preventDefault();
       var ok = true;
 
       ["bookName", "bookContact", "bookEventType", "bookDate"].forEach(function (id) {
-        var input = document.getElementById(id);
+        var input = bookingForm.querySelector("#" + id);
         if (!input) return;
 
         var valid = input.value.trim() !== "" &&
@@ -472,13 +536,15 @@
         bookingNote.textContent = "Please fill in your name, a 10-digit contact number, event type, and preferred date.";
         return;
       }
-      sendForm(bookingForm, bookingNote, function () {
-        setTimeout(function () {
-          closeBooking();
-          bookingNote.className = "form__note";
-          bookingNote.textContent = "";
-        }, 2500);
-      });
+      sendForm(bookingForm, bookingNote, EMAILJS.bookingTemplate,
+        "Booking request sent successfully! We will contact you soon.",
+        function () {
+          setTimeout(function () {
+            closeBooking();
+            bookingNote.className = "form__note";
+            bookingNote.textContent = "";
+          }, 2500);
+        });
     });
   }
 
